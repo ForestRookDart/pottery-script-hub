@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create Pottery Script — Auto-Fire Glazes & Kiln Temps for Windows</title>
+<style>
+  :root{
+    --bg-deep:#070a16;
+    --bg-mid:#0d1330;
+    --bg-soft:#151d3f;
+    --ink:#eef1ff;
+    --muted:#9aa3c7;
+    --accent:#7c5cff;
+    --accent-2:#22d3ee;
+    --accent-3:#f472b6;
+    --line:rgba(255,255,255,.09);
+    --glass:rgba(18,24,54,.55);
+    --radius:18px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1200px 700px at 15% -10%, rgba(124,92,255,.28), transparent 60%),
+      radial-gradient(1000px 600px at 90% 0%, rgba(34,211,238,.16), transparent 55%),
+      radial-gradient(900px 700px at 50% 120%, rgba(244,114,182,.12), transparent 60%),
+      linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-mid) 45%, var(--bg-soft) 100%);
+    background-attachment:fixed;
+    min-height:100vh;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;text-decoration:none}
+  .wrap{width:min(1140px,92%);margin-inline:auto}
+
+  /* ---------- NAV ---------- */
+  header.nav{
+    position:sticky;top:0;z-index:50;
+    backdrop-filter:blur(18px) saturate(160%);
+    -webkit-backdrop-filter:blur(18px) saturate(160%);
+    background:linear-gradient(180deg, rgba(12,17,38,.78), rgba(12,17,38,.45));
+    border-bottom:1px solid var(--line);
+  }
+  .nav-inner{
+    display:flex;align-items:center;justify-content:space-between;
+    gap:24px;padding:14px 0;
+  }
+  .brand{
+    display:flex;align-items:center;gap:10px;
+    font-weight:800;letter-spacing:.3px;font-size:1.02rem;
+  }
+  .brand .mark{
+    width:32px;height:32px;border-radius:10px;
+    display:grid;place-items:center;font-size:1rem;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    box-shadow:0 6px 20px rgba(124,92,255,.45);
+  }
+  .brand span:last-child{
+    background:linear-gradient(90deg,#fff,#b9c3ff);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .nav-links{display:flex;gap:28px;font-size:.92rem;color:var(--muted)}
+  .nav-links a{transition:color .2s ease}
+  .nav-links a:hover{color:#fff}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:9px;
+    font-weight:700;font-size:.92rem;border-radius:12px;
+    padding:11px 20px;border:1px solid transparent;cursor:pointer;
+    transition:transform .18s ease, box-shadow .25s ease, background .25s ease;
+    white-space:nowrap;
+  }
+  .btn-primary{
+    background:linear-gradient(135deg,var(--accent) 0%,#9b6bff 50%,var(--accent-2) 130%);
+    color:#fff;
+    box-shadow:0 10px 30px rgba(124,92,255,.4);
+  }
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(124,92,255,.55)}
+  .btn-ghost{
+    background:rgba(255,255,255,.04);
+    border:1px solid var(--line);
+    color:var(--ink);
+  }
+  .btn-ghost:hover{background:rgba(255,255,255,.1);transform:translateY(-2px)}
+
+  /* ---------- HERO ---------- */
+  .hero{padding:88px 0 64px;text-align:center;position:relative}
+  .pill{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:.76rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+    color:#c9d2ff;
+    padding:7px 16px;border-radius:999px;
+    border:1px solid rgba(124,92,255,.45);
+    background:rgba(124,92,255,.12);
+    box-shadow:inset 0 0 24px rgba(124,92,255,.18);
+  }
+  .pill .dot{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--accent-2);
+    box-shadow:0 0 10px var(--accent-2);
+    animation:pulse 2.2s infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  h1{
+    margin:26px auto 20px;
+    font-size:clamp(2.2rem,5.6vw,4rem);
+    line-height:1.08;
+    letter-spacing:-.02em;
+    font-weight:900;
+    max-width:16ch;
+    background:linear-gradient(100deg,#ffffff 0%,#b9a4ff 40%,#7cd8ff 70%,#ff9ed2 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .hero p.lead{
+    max-width:640px;margin:0 auto;
+    color:var(--muted);font-size:clamp(1rem,2.1vw,1.14rem);
+  }
+  .hero-cta{
+    display:flex;flex-wrap:wrap;gap:14px;justify-content:center;
+    margin:34px 0 40px;
+  }
+  .hero-cta .btn{padding:14px 28px;font-size:1rem;border-radius:14px}
+
+  .stats{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:14px;
+    max-width:840px;margin:0 auto;
+  }
+  .stat{
+    padding:16px 12px;border-radius:14px;
+    background:rgba(255,255,255,.035);
+    border:1px solid var(--line);
+    backdrop-filter:blur(8px);
+  }
+  .stat b{display:block;font-size:1.05rem;letter-spacing:.2px}
+  .stat small{color:var(--muted);font-size:.76rem;text-transform:uppercase;letter-spacing:.1em}
+
+  /* ---------- SECTION HEADS ---------- */
+  section{padding:72px 0}
+  .sec-head{text-align:center;margin-bottom:46px}
+  .sec-head .kicker{
+    font-size:.75rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--accent-2);
+  }
+  .sec-head h2{
+    font-size:clamp(1.6rem,3.6vw,2.4rem);
+    margin-top:10px;font-weight:850;letter-spacing:-.01em;
+  }
+  .sec-head p{color:var(--muted);max-width:560px;margin:12px auto 0;font-size:.97rem}
+
+  /* ---------- FEATURES ---------- */
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .card{
+    position:relative;overflow:hidden;
+    padding:26px 24px 28px;border-radius:var(--radius);
+    background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+    border:1px solid var(--line);
+    transition:transform .25s ease, box-shadow .3s ease, border-color .3s ease;
+  }
+  .card::before{
+    content:"";position:absolute;inset:0 0 auto 0;height:3px;
+    background:linear-gradient(90deg,var(--accent),var(--accent-2),var(--accent-3));
+    opacity:.85;
+  }
+  .card:hover{
+    transform:translateY(-8px);
+    border-color:rgba(124,92,255,.45);
+    box-shadow:0 22px 45px rgba(0,0,0,.45), 0 0 0 1px rgba(124,92,255,.15);
+  }
+  .card .ico{
+    font-size:1.5rem;width:48px;height:48px;border-radius:13px;
+    display:grid;place-items:center;margin-bottom:16px;
+    background:rgba(124,92,255,.14);
+    border:1px solid rgba(124,92,255,.28);
+  }
+  .card h3{font-size:1.06rem;margin-bottom:8px;font-weight:800}
+  .card p{color:var(--muted);font-size:.9rem}
+
+  /* ---------- HOW IT WORKS ---------- */
+  .steps{position:relative;max-width:720px;margin:0 auto;padding-left:8px}
+  .steps::before{
+    content:"";position:absolute;left:31px;top:14px;bottom:14px;width:3px;border-radius:3px;
+    background:linear-gradient(180deg,var(--accent),var(--accent-2),var(--accent-3));
+    opacity:.7;
+  }
+  .step{position:relative;display:flex;gap:22px;padding:0 0 40px 0}
+  .step:last-child{padding-bottom:0}
+  .step .num{
+    flex:0 0 48px;width:48px;height:48px;border-radius:50%;
+    display:grid;place-items:center;font-weight:900;font-size:1.05rem;
+    color:#fff;background:linear-gradient(135deg,var(--accent),#4f46e5);
+    box-shadow:0 0 0 6px rgba(124,92,255,.14), 0 8px 22px rgba(124,92,255,.4);
+    z-index:1;
+  }
+  .step h3{font-size:1.08rem;margin-bottom:6px;font-weight:800;padding-top:9px}
+  .step p{color:var(--muted);font-size:.92rem;max-width:520px}
+
+  /* ---------- FAQ ---------- */
+  .faq{max-width:780px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+  details{
+    border-radius:14px;overflow:hidden;
+    background:rgba(255,255,255,.035);
+    border:1px solid var(--line);
+    transition:border-color .25s ease, background .25s ease;
+  }
+  details[open]{border-color:rgba(124,92,255,.4);background:rgba(124,92,255,.06)}
+  summary{
+    list-style:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding:18px 22px;font-weight:700;font-size:.98rem;
+  }
+  summary::-webkit-details-marker{display:none}
+  summary .plus{
+    flex:0 0 26px;width:26px;height:26px;border-radius:50%;
+    display:grid;place-items:center;position:relative;
+    background:rgba(255,255,255,.07);border:1px solid var(--line);
+    font-size:1rem;line-height:1;color:var(--accent-2);
+    transition:transform .3s ease, background .3s ease;
+  }
+  details[open] summary .plus{
+    transform:rotate(45deg);
+    background:rgba(124,92,255,.25);
+    color:#fff;
+  }
+  details p{
+    padding:0 22px 20px;color:var(--muted);font-size:.92rem;max-width:64ch;
+  }
+
+  /* ---------- CTA BANNER ---------- */
+  .cta-banner{
+    position:relative;overflow:hidden;
+    border-radius:26px;padding:64px 32px;text-align:center;
+    border:1px solid rgba(124,92,255,.35);
+    background:
+      radial-gradient(700px 320px at 50% 0%, rgba(124,92,255,.4), transparent 65%),
+      radial-gradient(500px 280px at 15% 100%, rgba(34,211,238,.25), transparent 65%),
+      radial-gradient(500px 280px at 85% 100%, rgba(244,114,182,.2), transparent 65%),
+      linear-gradient(180deg, rgba(20,27,60,.9), rgba(10,14,34,.95));
+    box-shadow:0 30px 80px rgba(0,0,0,.5);
+  }
+  .cta-banner h2{
+    font-size:clamp(1.6rem,3.8vw,2.5rem);font-weight:900;letter-spacing:-.01em;
+    background:linear-gradient(90deg,#fff,#c3b4ff,#7cd8ff);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .cta-banner p{color:var(--muted);max-width:520px;margin:14px auto 30px;font-size:.98rem}
+
+  /* ---------- FOOTER ---------- */
+  footer{
+    border-top:1px solid var(--line);
+    padding:34px 0 42px;
+    margin-top:24px;
+  }
+  .foot-inner{
+    display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;
+    color:var(--muted);font-size:.86rem;
+  }
+  .foot-inner a{color:#c9d2ff;font-weight:600;transition:color .2s}
+  .foot-inner a:hover{color:#fff}
+  .foot-brand{display:flex;align-items:center;gap:9px;color:var(--muted)}
+  .foot-brand .mark{
+    width:24px;height:24px;border-radius:7px;font-size:.75rem;
+    display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width:900px){
+    .grid{grid-template-columns:repeat(2,1fr)}
+    .stats{grid-template-columns:repeat(2,1fr)}
+  }
+  @media (max-width:640px){
+    .nav-links{display:none}
+    .nav-inner{padding:12px 0}
+    header.nav .btn-primary{padding:9px 15px;font-size:.84rem}
+    .brand{font-size:.94rem}
+    .hero{padding:56px 0 44px}
+    .grid{grid-template-columns:1fr}
+    .stats{grid-template-columns:1fr 1fr;gap:10px}
+    .hero-cta{flex-direction:column;align-items:stretch}
+    .hero-cta .btn{width:100%}
+    .steps::before{left:23px}
+    .step{gap:16px}
+    .step .num{flex-basis:40px;width:40px;height:40px;font-size:.92rem}
+    .cta-banner{padding:46px 20px;border-radius:20px}
+    .foot-inner{flex-direction:column;text-align:center;justify-content:center}
+  }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top" aria-label="pottery-script-hub home">
+      <span class="mark">🏺</span>
+      <span>pottery-script-hub</span>
+    </a>
+    <nav class="nav-links" aria-label="Main navigation">
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a class="btn btn-primary" href="https://gitscore.cc" target="_blank" rel="noopener">Download</a>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap">
+      <span class="pill"><span class="dot"></span>Create Pottery Script</span>
+      <h1>Fire Perfect Glazes Without Touching the Kiln</h1>
+      <p class="lead">
+        Create Pottery Script auto-fires glazes, tunes kiln temperatures, snaps symmetric shapes,
+        and dumps finished pottery patterns straight to Lua — a lightweight Windows companion for
+        your pottery-script-hub workflow.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="https://gitscore.cc" target="_blank" rel="noopener">⬇ Download for Windows</a>
+        <a class="btn btn-ghost" href="https://gitscore.cc" target="_blank" rel="noopener">★ View on GitHub</a>
+      </div>
+      <div class="stats">
+        <div class="stat"><b>48.2k+</b><small>Downloads</small></div>
+        <div class="stat"><b>v3.4.1</b><small>Latest release</small></div>
+        <div class="stat"><b>Windows 10 / 11</b><small>Platform</small></div>
+        <div class="stat"><b>Free &amp; open source</b><small>License</small></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="kicker">Features</div>
+        <h2>Everything your pottery pipeline needs</h2>
+        <p>Six focused tools that replace manual kiln babysitting with deterministic, scriptable automation.</p>
+      </div>
+      <div class="grid">
+        <article class="card">
+          <div class="ico">🔥</div>
+          <h3>Auto-Fire Glazes</h3>
+          <p>Queue glaze recipes and let Create Pottery Script run the full fire cycle with consistent ramp curves every time.</p>
+        </article>
+        <article class="card">
+          <div class="ico">🌡️</div>
+          <h3>Kiln Temp Tuning</h3>
+          <p>Dial in precise temperature profiles, hold times, and cool-downs, then save them as reusable presets for any clay body.</p>
+        </article>
+        <article class="card">
+          <div class="ico">🪞</div>
+          <h3>Symmetric Shape Snap</h3>
+          <p>Snap thrown profiles to perfect radial symmetry so bowls, vases, and plates stay mirrored down to the millimeter.</p>
+        </article>
+        <article class="card">
+          <div class="ico">📦</div>
+          <h3>Lua Pattern Export</h3>
+          <p>Dump every finished pottery pattern to clean, commented Lua files ready to drop into your pottery-script-hub project.</p>
+        </article>
+        <article class="card">
+          <div class="ico">⚡</div>
+          <h3>Batch Processing</h3>
+          <p>Fire entire collections unattended. The batch runner handles sequencing, retries, and per-piece logging automatically.</p>
+        </article>
+        <article class="card">
+          <div class="ico">🛡️</div>
+          <h3>Safe Dry-Run Mode</h3>
+          <p>Simulate glaze fires and preview Lua output before committing — no wasted clay, no overheated kilns, no surprises.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="how">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="kicker">How it works</div>
+        <h2>From raw shape to Lua in three steps</h2>
+        <p>No configuration maze — install, load your project, and let the script handle the fire.</p>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="num">1</div>
+          <div>
+            <h3>Install &amp; point it at your project</h3>
+            <p>Grab the Windows build from gitscore.cc, launch Create Pottery Script, and select your pottery-script-hub workspace folder.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">2</div>
+          <div>
+            <h3>Load shapes, glazes &amp; kiln profiles</h3>
+            <p>Import your symmetric shapes and glaze recipes. Tune temperature curves, enable symmetry snap, and preview the fire plan.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">3</div>
+          <div>
+            <h3>Auto-fire and export to Lua</h3>
+            <p>Run the batch. Finished pottery patterns are dumped as Lua files into your repo, ready to commit and share.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="kicker">FAQ</div>
+        <h2>Questions from the wheel</h2>
+        <p>Quick answers about installing and running Create Pottery Script on Windows.</p>
+      </div>
+      <div class="faq">
+        <details open>
+          <summary>Is Create Pottery Script really free? <span class="plus">+</span></summary>
+          <p>Yes. It is fully free and open source. Download the latest Windows build from gitscore.cc, and the source is available for inspection and contribution in the pottery-script-hub repository.</p>
+        </details>
+        <details>
+          <summary>Which Windows versions are supported? <span class="plus">+</span></summary>
+          <p>Create Pottery Script runs natively on Windows 10 and Windows 11, 64-bit. No extra runtime or dependencies are required beyond the installer.</p>
+        </details>
+        <details>
+          <summary>How does the Lua export work? <span class="plus">+</span></summary>
+          <p>Every finished pottery pattern — shape, glaze, kiln profile, and timing — is serialized into a clean, commented Lua module. Files land directly in your pottery-script-hub workspace so you can commit them with your normal Git flow.</p>
+        </details>
+        <details>
+          <summary>Can I test kiln runs without firing for real? <span class="plus">+</span></summary>
+          <p>Absolutely. Dry-Run Mode simulates the full glaze fire, symmetry snap, and Lua export in-memory so you can validate recipes and batch scripts before any real kiln time is used.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA BANNER -->
+  <section>
+    <div class="wrap">
+      <div class="cta-banner">
+        <h2>Ready to automate your kiln?</h2>
+        <p>Download Create Pottery Script for Windows and turn manual glaze firing into a repeatable, scriptable pipeline.</p>
+        <a class="btn btn-primary" href="https://gitscore.cc" target="_blank" rel="noopener">⬇ Download Create Pottery Script</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap foot-inner">
+    <div class="foot-brand">
+      <span class="mark">🏺</span>
+      <span>© 2025 pottery-script-hub. All rights reserved.</span>
+    </div>
+    <div>
+      <a href="https://gitscore.cc" target="_blank" rel="noopener">GitHub Repository</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
